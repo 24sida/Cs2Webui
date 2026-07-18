@@ -1,0 +1,6 @@
+@Cs2Manger.api_HostAddress = http://localhost:5159
+
+GET {{Cs2Manger.api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
