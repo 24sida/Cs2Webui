@@ -46,11 +46,7 @@ public class Cs2RconService
         await EnsureConnectedAsync();
         return await _rcon.SendCommandAsync("status");
     }
-    public async Task<string> KickPlayer(string playerName)
-    {
-        await EnsureConnectedAsync();
-        return await _rcon.SendCommandAsync($"kick \"{playerName}\"");
-    }
+   
 
     public async Task<string> SetCvar(string cvar, string value)
     {
@@ -58,11 +54,7 @@ public class Cs2RconService
         return await _rcon.SendCommandAsync($"{cvar} {value}");
     }
 
-    public async Task<string> RunCommand(string raw)
-    {
-        await EnsureConnectedAsync();
-        return await _rcon.SendCommandAsync(raw);
-    }
+    
     public async Task<(int currentplayers, int currentbots, int max)> GetPlayerAndbotsCount()
     {
         var status = await GetStatus();
