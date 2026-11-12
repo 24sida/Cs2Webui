@@ -1,6 +1,7 @@
 ﻿using CoreRCON;
 using System.Diagnostics;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Cs2Manager.Api.Services;
 
@@ -34,7 +35,17 @@ public class Cs2RconService
         return await _rcon.SendCommandAsync($"changelevel {mapName}");
        
     }
-
+    public async Task<string> SetGameMode(int gameType, int gameMode)
+    {
+        await EnsureConnectedAsync();
+        await _rcon.SendCommandAsync($"game_type {gameType}");
+        return await _rcon.SendCommandAsync($"game_mode {gameMode}");
+    }
+    public async Task<string> GetStatus()
+    {
+        await EnsureConnectedAsync();
+        return await _rcon.SendCommandAsync("status");
+    }
     public async Task<string> KickPlayer(string playerName)
     {
         await EnsureConnectedAsync();
@@ -51,5 +62,48 @@ public class Cs2RconService
     {
         await EnsureConnectedAsync();
         return await _rcon.SendCommandAsync(raw);
+    }
+    public async Task<(int currentplayers, int currentbots, int max)> GetPlayerAndbotsCount()
+    {
+        var status = await GetStatus();
+
+        var match = Regex.Match(status, @"players\s*:\s*(\d+)\s*humans,\s*(\d+)\s*bots\s*\((\d+)\s*max\)");
+
+        if (match.Success)
+        {
+            int humans = int.Parse(match.Groups[1].Value);
+            int bots = int.Parse(match.Groups[2].Value);
+            int max = int.Parse(match.Groups[3].Value);
+            return (humans, bots, max);
+        }
+
+        return (0, 0,0);
+    }
+    public async Task<List<string>> GetNametag()
+    {
+        var status = await GetStatus();
+        var matches = Regex.Matches(status, @"^\s*\d+\s+.*?'(.+?)'\s*$", RegexOptions.Multiline);
+        var names = new List<string>();
+        foreach (Match m in matches)
+        {
+            names.Add(m.Groups[1].Value);
+        }
+
+        return names;
+
+    }
+    public async Task<string> TogglePause(bool isPaused)
+    {
+        await EnsureConnectedAsync();
+        var command = isPaused ? "mp_unpause_match" : "mp_pause_match";
+        return await _rcon.SendCommandAsync(command);
+    }
+
+
+    public async Task<string> GetAll()
+    {
+
+               await EnsureConnectedAsync();
+            return await _rcon.SendCommandAsync("status; mp_pause_match; mp_unpause_match; changelevel; game_type; game_mode");
     }
 }

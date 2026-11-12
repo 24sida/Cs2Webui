@@ -20,7 +20,39 @@ public class ServerController : ControllerBase
     {
         var result = await _rcon.ChangeMap(request.Map);
         return Ok(result);
+
     }
+    [HttpPost("gamemode")]
+    public async Task<IActionResult> SetGameMode([FromBody] SetGameModeRequest request)
+    {
+        var result = await _rcon.SetGameMode(request.GameType, request.GameMode);
+        return Ok(result);
+    }
+
+    public record SetGameModeRequest(int GameType, int GameMode);
+
+
+    [HttpGet("playercount")]
+    public async Task<IActionResult> GetPlayerAndbotsCount()
+    {
+        var (currentplayers, currentbots, max) = await _rcon.GetPlayerAndbotsCount();
+        return Ok(new { currentplayers, currentbots, max });
+    }
+
+    [HttpGet("players")]
+    public async Task<IActionResult> GetPlayerNames()
+    {
+        var names = await _rcon.GetNametag();
+        return Ok(names);
+    }
+    [HttpPost("pause-toggle")]
+    public async Task<IActionResult> TogglePause([FromBody] TogglePauseRequest request)
+    {
+        var result = await _rcon.TogglePause(request.IsPaused);
+        return Ok(result);
+    }
+
+    public record TogglePauseRequest(bool IsPaused);
 }
 
 public record ChangeMapRequest(string Map);
