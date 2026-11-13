@@ -32,19 +32,17 @@ public class ServerController : ControllerBase
     public record SetGameModeRequest(int GameType, int GameMode);
 
 
-    [HttpGet("playercount")]
+    [HttpGet("players")]
     public async Task<IActionResult> GetPlayerAndbotsCount()
     {
+        var names = await _rcon.GetNametag();
         var (currentplayers, currentbots, max) = await _rcon.GetPlayerAndbotsCount();
-        return Ok(new { currentplayers, currentbots, max });
+        return Ok(new { currentplayers, currentbots, max, names });
+       
+
     }
 
-    [HttpGet("players")]
-    public async Task<IActionResult> GetPlayerNames()
-    {
-        var names = await _rcon.GetNametag();
-        return Ok(names);
-    }
+   
     [HttpPost("pause-toggle")]
     public async Task<IActionResult> TogglePause([FromBody] TogglePauseRequest request)
     {

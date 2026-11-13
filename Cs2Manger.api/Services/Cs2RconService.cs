@@ -8,8 +8,9 @@ namespace Cs2Manager.Api.Services;
 public class Cs2RconService
 {
     private readonly RCON _rcon;
+    private int human = 0, bot = 0, maxis = 0;
     private bool _connected = false;
-
+    private readonly SemaphoreSlim _rconLock = new(1, 1);
     public Cs2RconService(IConfiguration config)
     {
         var host = config["Rcon:Host"];
@@ -43,10 +44,19 @@ public class Cs2RconService
     }
     public async Task<string> GetStatus()
     {
-        await EnsureConnectedAsync();
-        return await _rcon.SendCommandAsync("status");
+        await _rconLock.WaitAsync();
+
+        try
+        {
+            await EnsureConnectedAsync();
+
+            return await _rcon.SendCommandAsync("status");
+        }
+        finally
+        {
+            _rconLock.Release();
+        }
     }
-   
 
     public async Task<string> SetCvar(string cvar, string value)
     {
@@ -66,10 +76,14 @@ public class Cs2RconService
             int humans = int.Parse(match.Groups[1].Value);
             int bots = int.Parse(match.Groups[2].Value);
             int max = int.Parse(match.Groups[3].Value);
+            human = humans;
+            bot = bots;
+            maxis = max;
+
             return (humans, bots, max);
         }
 
-        return (0, 0,0);
+        return (human, bot, maxis);
     }
     public async Task<List<string>> GetNametag()
     {
@@ -92,10 +106,4 @@ public class Cs2RconService
     }
 
 
-    public async Task<string> GetAll()
-    {
-
-               await EnsureConnectedAsync();
-            return await _rcon.SendCommandAsync("status; mp_pause_match; mp_unpause_match; changelevel; game_type; game_mode");
-    }
 }
